@@ -3,9 +3,11 @@ module Auth;
 export {
         ## IP Addresses that send Palo Alto Firewall logs
         const panos_log_sources: set[addr] &redef;
+        ## IP Addresses that receive Palo Alto Firewall logs
+        const panos_log_recipients: set[addr] &redef;
 		## Interval of inactivity to wait where not seeing an IP means 
 		## that a user has "Logged out" from the network.
-		const expire_interval = 15min;
+		const panos_auth_expire_interval = 15min &redef;
 }
 
 function expire(s: set[addr, string], idx: any): interval
@@ -24,7 +26,7 @@ function expire(s: set[addr, string], idx: any): interval
     return 0secs;
     }
 
-global palo_alto_users: set[addr, string] &read_expire=expire_interval &expire_func=expire &synchronized;
+global palo_alto_users: set[addr, string] &read_expire=panos_auth_expire_interval &expire_func=expire &synchronized;
 
 function process_auth(a: string, user: string)
         {
@@ -46,7 +48,7 @@ function process_auth(a: string, user: string)
 
 event syslog_message(c: connection, facility: count, severity: count, msg: string)
         {
-        if ( c$id$orig_h in panos_log_sources )
+        if ( c$id$orig_h in panos_log_sources && c$id$resp_h in panos_log_recipients )
                 {
 				# Fields :
 				# 4: The Log Message Type.
