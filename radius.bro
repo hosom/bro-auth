@@ -2,12 +2,13 @@ module Auth;
 
 event RADIUS::log_radius(rec: RADIUS::Info)
 	{
-	if ( rec?$username )
+	if ( rec?$username && rec?$mac )
 		{
 		local i = Info($ts=rec$ts,
 						$username=rec$username,
 						$endpoint=Endpoint($mac=rec$mac),
 						$service="Network Access",
+						$hardware_auth=T,
 						$method="Radius");
 		if ( rec$result == "failed" )
 			i$success = F;
